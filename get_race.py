@@ -7,7 +7,7 @@ load_url = URL
 html = requests.get(load_url)
 soup = BeautifulSoup(html.content, 'html.parser')
 
-csv_file = open('./race.csv', 'w', newline='', encoding='shift-jis')
+csv_file = open('./race.csv', 'w', newline='', encoding='utf-8')
 csv_writer = csv.writer(csv_file)
 
 
