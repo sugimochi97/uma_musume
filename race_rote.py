@@ -2,7 +2,6 @@ import pandas as pd
 from tkinter import *
 
 PATH='race.csv'
-RACE_COLUMNS = ['年', '月', 'レース名', 'クラス', '場所', '距離', '回り']
 
 class Race_rote_app():
     def __init__(self):
@@ -24,12 +23,17 @@ class Race_rote_app():
         self.read_race_data()
 
     def read_race_data(self):
-        self.df_race = pd.read_csv(PATH, names=RACE_COLUMNS)
+        self.df_race = pd.read_csv(PATH)
     
     def search_race(self):
         en = self.txt.get()
         s = self.df_race[self.df_race['レース名'].str.contains(en)]
-        self.text.set(s)
+        root = Tk()
+        root.title('レース選択')
+        root.geometry('500x500')
+        print(list(s.iloc[0]))
+        print(s.iloc[1])
+        root.mainloop()
 
     def run(self):
         self.tk.mainloop()
