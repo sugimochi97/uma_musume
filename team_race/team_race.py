@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 
-RACE_RESULT_PATH = 'race_result_ver1.0.0.csv'
+RACE_RESULT_PATH = 'race_result_ver1.0.1.csv'
 TEAME_DATA_PATH = 'team_data_ver1.0.0.csv'
 NORMAL_SKILL_PATH = 'team_race_normal_skill_point.csv'
 UNIQUE_SKILL_PATH = 'team_race_unique_skill_point.csv'
@@ -19,6 +19,12 @@ class TeamRace:
         self.df_unique_skill = pd.read_csv(UNIQUE_SKILL_PATH)
         self.df_rank_point = pd.read_csv(RANK_POINT_PATH, index_col=0)
         self.df_bonus_point = pd.read_csv(TEAM_BONUS_PATH)
+        
+        # チームボーナスを読み込む
+        with open(RACE_RESULT_PATH, 'r', encoding='utf-8') as obj:
+            obj_read = obj.readlines()
+            if len(obj_read) >= 22:
+                self.team_bonus = int(obj_read[-1].rstrip(','))
 
         self.df_result = self.df_result.dropna(how='any')
         self.df_result.iloc[:, 1:12] = self.df_result.iloc[:, 1:12].astype(int)
@@ -78,26 +84,28 @@ class TeamRace:
         
         # ndarrayの型を浮動小数点に変更
         self.score = self.score.astype(np.float)
+        self.base_score = self.score.copy()
 
         # エース倍率をかける
         self.score[::3] *= ACE_BONUS
+        self.score.round()
+        print(self.score)
 
         # 連勝数の倍率をかける
-        self.score *= np.array(self.df_result['連勝数'], dtype=np.float)/100+1
+        self.score += (self.base_score * np.array(self.df_result['連勝数'], dtype=np.float)/100+1).round()
+        print(self.score)
 
-        
         # 対戦相手ボーナスをかける
-        self.score *= np.array(self.df_result['対戦相手ボーナス'], dtype=np.float)
+        self.score += (self.base_score * (np.array(self.df_result['対戦相手ボーナス'], dtype=np.float)-1)).round()
+        print(self.score)
 
         # サポート割合をかける
-        self.score *= np.array(self.df_result['サポート割合'], dtype=np.float)
+        self.score += (self.base_score * (np.array(self.df_result['サポート割合'], dtype=np.float)-1)).round()
+        print(self.score)
 
-        print(self.score.sum())
-
+        print(self.score.sum() + self.team_bonus)
 
         
-
-
 
 t = TeamRace()
 t.calc_score()
