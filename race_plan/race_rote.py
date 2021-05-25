@@ -25,9 +25,14 @@ UPD_BTN_TEXT = '更新'
 UPD_BTN_X=80
 UPD_BTN_Y=50
 
-ADD_BTN_TXT='レースを追加'
+ADD_BTN_TEXT='レースを追加'
+ALL_BTN_TEXT='全選択'
+ALL_BTN_X=130
 
 DONE_RACE = 0
+
+MONTH_ZEN = 0.1
+MONTH_KOU = 0.2
 
 
 class Race_rote_app():
@@ -59,7 +64,7 @@ class Race_rote_app():
 
         new_window = Toplevel()
         new_window.title('レース選択')
-        new_window.geometry('500x500')
+        new_window.geometry('500x1000')
 
         self.search_races = []
         for i in range(len(self.search_result)):
@@ -67,10 +72,25 @@ class Race_rote_app():
                                         self.search_result[i][6], self.search_result[i][7], self.search_result[i][8], new_window))
             self.search_races[-1].chk.place(x=CHK_X, y=CHK_Y + SEP*i)
 
-        add_btn = Button(new_window, text=ADD_BTN_TXT, command=self.add_race)
+        add_btn = Button(new_window, text=ADD_BTN_TEXT, command=self.add_race)
         add_btn.place(x=CHK_X, y=CHK_Y + SEP*len(self.search_result))
+
+        all_btn = Button(new_window, text=ALL_BTN_TEXT, command=self.chose_all)
+        all_btn.place(x=ALL_BTN_X, y=CHK_Y + SEP*len(self.search_result))
+
         new_window.mainloop()
-        
+
+    def add_race(self):
+        for i in range(len(self.search_races)):
+            if self.search_races[i].bln.get():
+                race = self.search_races[i]
+                self.race_list.append(Race(race.year, race.month, race.name, race.race_class, 
+                                            race.place, race.length, race.direction, self.tk))
+        self.update()
+
+    def chose_all(self):
+        for i in self.search_races:
+            i.bln.set(True)
 
     def update(self):
         s = 0
@@ -84,15 +104,79 @@ class Race_rote_app():
         
         while DONE_RACE in self.race_list:
             self.race_list.remove(DONE_RACE)
-        print([i.name for i in self.race_list])
+        
+        self.sort_race()
 
-    def add_race(self):
-        for i in range(len(self.search_races)):
-            if self.search_races[i].bln.get():
-                race = self.search_races[i]
-                self.race_list.append(Race(race.year, race.month, race.name, race.race_class, 
-                                            race.place, race.length, race.direction, self.tk))
-        self.update()
+    def sort_race(self):
+        race_yms = []
+        for race in self.race_list:
+            race_yms.append([int(race.year[0]), 
+                            int(race.month[:-3])])
+            if race.month[-2:] == '前半':
+                race_yms[-1][1] += MONTH_ZEN
+            elif race.month[-2:] == '後半':
+                race_yms[-1][1] += MONTH_KOU
+
+        years = [i[0] for i in race_yms]
+
+        # 年をソートする
+        for i in range(len(self.race_list)):
+            for j in range(len(self.race_list)):
+                if race_yms[i][0] < race_yms[j][0]:
+                    tmp = race_yms[i]
+                    race_yms[i] = race_yms[j]
+                    race_yms[j] = tmp
+
+                    tmp = self.race_list[i]
+                    self.race_list[i] = self.race_list[j]
+                    self.race_list[j] = tmp
+
+        # 1年目を月毎にソート
+        if 1 in years:
+            ri = self.count_rindex([i[0] for i in race_yms], 1) # 1年目の最後尾のインデックス番号取得
+            for i in range(len(self.race_list[:ri+1])):
+                for j in range(len(self.race_list[:ri+1])):
+                    if race_yms[i][1] < race_yms[j][1]:
+                        tmp = race_yms[i]
+                        race_yms[i] = race_yms[j]
+                        race_yms[j] = tmp
+
+                        tmp = self.race_list[i]
+                        self.race_list[i] = self.race_list[j]
+                        self.race_list[j] = tmp
+
+        # 2年目を月毎にソート
+        if 2 in years:
+            ind = [i[0] for i in race_yms].index(2)
+            ri = self.count_rindex([i[0] for i in race_yms], 2)
+            for i in range(ind, len(self.race_list[:ri+1])):
+                for j in range(ind, len(self.race_list[:ri+1])):
+                    if race_yms[i][1] < race_yms[j][1]:
+                        tmp = race_yms[i]
+                        race_yms[i] = race_yms[j]
+                        race_yms[j] = tmp
+
+                        tmp = self.race_list[i]
+                        self.race_list[i] = self.race_list[j]
+                        self.race_list[j] = tmp
+
+        # 3年目を月毎にソート
+        if 3 in years:
+            ind = [i[0] for i in race_yms].index(3)
+            for i in range(ind, len(self.race_list)):
+                for j in range(ind, len(self.race_list)):
+                    if race_yms[i][1] < race_yms[j][1]:
+                        tmp = race_yms[i]
+                        race_yms[i] = race_yms[j]
+                        race_yms[j] = tmp
+
+                        tmp = self.race_list[i]
+                        self.race_list[i] = self.race_list[j]
+                        self.race_list[j] = tmp
+            
+    def count_rindex(self, lis, n):
+        return len(lis) - (lis[::-1].index(n)+1)
+
 
     def run(self):
         self.tk.mainloop()
