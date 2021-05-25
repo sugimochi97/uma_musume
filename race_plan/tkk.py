@@ -1,10 +1,10 @@
 from tkinter import *
-from p import *
 
 def btn_click():
-    global text, var
-    text.set(f'数値:{var.get()}')
-    print(var.get())
+    global text, var, bln, chk
+    text.set(f'数値:{bln.get()}')
+    print(bln.get())
+    chk.destroy()
 
 tk = Tk()
 tk.title('ウマ娘 p計算ソフト')
